@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import styled from 'styled-components';
 import { getImages } from '../API/api';
 import { mapperImages } from '../helpers/mapper';
 import { Loader } from './Loader/Loader';
@@ -9,6 +8,7 @@ import { Button } from './Button/Button';
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import { Modal } from './Modal/Modal';
+import { DivStyled } from './DivStyled';
 
 class App extends Component {
   state = {
@@ -17,6 +17,7 @@ class App extends Component {
     bigImage: '',
     page: 1,
     isLoading: false,
+    loadedAllPages: false,
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -38,9 +39,13 @@ class App extends Component {
         this.setState(prevState => ({
           images: [...prevState.images, ...mapperImages(res.data.hits)],
         }));
+        if (res.data.hits.length  === this.state.imageQuery.length) {
+          this.setState({ loadedAllPages: true })
+      }
         if (res.data.hits.length === 0) {
           return toast.error('Type something carefully');
         }
+        
       })
       .finally(() => {
         this.setState({ isLoading: false });
@@ -65,7 +70,7 @@ class App extends Component {
   };
 
   render() {
-    const { images, bigImage, isLoading } = this.state;
+    const { images, bigImage, isLoading, loadedAllPages } = this.state;
 
     return (
       <DivStyled>
@@ -78,7 +83,7 @@ class App extends Component {
           />
         )}
         {isLoading && <Loader />}
-        {images.length > 0 && <Button handleClick={this.showMoreImages} />}
+        {images.length > 0 && loadedAllPages && <Button handleClick={this.showMoreImages} />}
         {bigImage && <Modal image={bigImage} closeModal={this.closeModal} />}
       </DivStyled>
     );
@@ -87,9 +92,3 @@ class App extends Component {
 
 export { App };
 
-const DivStyled = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-gap: 16px;
-  padding-bottom: 24px;
-`;
