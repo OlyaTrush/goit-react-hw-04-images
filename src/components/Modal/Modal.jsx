@@ -1,41 +1,38 @@
-import React, { Component } from 'react';
+import React, { useEffect} from 'react';
 import PropTypes from 'prop-types';
 import { DivBackdropStyled, DivModalStyled } from './Modal.styled';
 
-export class Modal extends Component {
-  static propTypes = {
-    closeModal: PropTypes.func.isRequired,
-  };
+export function Modal({ image, closeModal }) {
+  useEffect(() => {
+    const handleClickByEsc = e => {
+      if (e.code === 'Escape') {
+        closeModal();
+      }
+    };
 
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleClickByEsc);
-  }
+    window.addEventListener('keydown', handleClickByEsc);
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleClickByEsc);
-  }
+    return () => {
+      window.removeEventListener('keydown', handleClickByEsc);
+    };
+  }, [closeModal]);
 
-  handleClickByEsc = e => {
-    if (e.code === 'Escape') {
-      this.props.closeModal();
-    }
-  };
-
-  backdropClick = e => {
+  const backdropClick = e => {
     if (e.currentTarget === e.target) {
-      this.props.closeModal();
+      closeModal();
     }
   };
 
-  render() {
-    const { image } = this.props;
-
-    return (
-      <DivBackdropStyled onClick={this.backdropClick}>
-        <DivModalStyled>
-          <img src={image} alt="something" />
-        </DivModalStyled>
-      </DivBackdropStyled>
-    );
-  }
+  return (
+    <DivBackdropStyled onClick={backdropClick}>
+      <DivModalStyled>
+        <img src={image} alt="something" />
+      </DivModalStyled>
+    </DivBackdropStyled>
+  );
 }
+
+Modal.propTypes = {
+  closeModal: PropTypes.func.isRequired,
+  image: PropTypes.string.isRequired,
+};

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { getImages } from '../API/api';
@@ -10,85 +10,62 @@ import ImageGallery from './ImageGallery/ImageGallery';
 import { Modal } from './Modal/Modal';
 import { DivStyled } from './DivStyled';
 
-class App extends Component {
-  state = {
-    images: [],
-    imageQuery: '',
-    bigImage: '',
-    page: 1,
-    isLoading: false,
-    loadedAllPages: false,
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [imageQuery, setImageQuery] = useState('');
+  const [bigImage, setBigImage] = useState('');
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading, loadedAllPages] = useState(false);
 
-  componentDidUpdate(prevProps, prevState) {
-    const { page, imageQuery } = this.state;
-
-    if (prevState.page !== page || prevState.imageQuery !== imageQuery) {
-      if (prevState.imageQuery !== imageQuery) {
-        this.setState({ page: 1 });
-      }
-      this.fetchImages();
+  useEffect(() => {
+    if (!imageQuery) {
+      return;
     }
-  }
 
-  fetchImages = () => {
-    this.setState({ isLoading: true });
+    setIsLoading(true);
 
-    getImages(this.state.imageQuery, this.state.page)
+    getImages(imageQuery, page)
       .then(res => {
-        this.setState(prevState => ({
-          images: [...prevState.images, ...mapperImages(res.data.hits)],
-        }));
-        if (res.data.hits.length  === this.state.imageQuery.length) {
-          this.setState({ loadedAllPages: true })
-      }
+        setImages(prevState => [...prevState, ...mapperImages(res.data.hits)]);
+        if (res.data.hits.length  === imageQuery.length) {
+          loadedAllPages(true) }
         if (res.data.hits.length === 0) {
           return toast.error('Type something carefully');
         }
-        
       })
       .finally(() => {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
       });
+  }, [page, imageQuery, loadedAllPages, setIsLoading]);
+
+  const handleFormSubmit = imageQuery => {
+    setImageQuery(imageQuery);
+    setImages([]);
+    setPage(1);
   };
 
-  handleFormSubmit = imageQuery => {
-    this.setState(() => ({ imageQuery: imageQuery, images: [] }));
-    this.setState({ page: 1 });
+  const showMoreImages = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  showMoreImages = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const closeModal = () => {
+    setBigImage('');
   };
 
-  closeModal = () => {
-    this.setState({ bigImage: '' });
+  const setCurrentImage = url => {
+    setBigImage(url);
   };
 
-  setCurrentImage = url => {
-    this.setState({ bigImage: url });
-  };
-
-  render() {
-    const { images, bigImage, isLoading, loadedAllPages } = this.state;
-
-    return (
-      <DivStyled>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        <ToastContainer />
-        {images.length > 0 && (
-          <ImageGallery
-            images={images}
-            setCurrentImage={this.setCurrentImage}
-          />
-        )}
-        {isLoading && <Loader />}
-        {images.length > 0 && loadedAllPages && <Button handleClick={this.showMoreImages} />}
-        {bigImage && <Modal image={bigImage} closeModal={this.closeModal} />}
-      </DivStyled>
-    );
-  }
-}
-
-export { App };
-
+  return (
+    <DivStyled>
+      <Searchbar onSubmit={handleFormSubmit} />
+      <ToastContainer />
+      {images.length > 0 && (
+        <ImageGallery images={images} setCurrentImage={setCurrentImage} />
+      )}
+      {isLoading && <Loader />}
+      {images.length > 0 && loadedAllPages && <Button handleClick={showMoreImages} />}
+      {bigImage && <Modal image={bigImage} closeModal={closeModal} />}
+    </DivStyled>
+  );
+};
