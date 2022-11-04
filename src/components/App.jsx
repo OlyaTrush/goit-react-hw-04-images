@@ -15,7 +15,7 @@ export const App = () => {
   const [imageQuery, setImageQuery] = useState('');
   const [bigImage, setBigImage] = useState('');
   const [page, setPage] = useState(1);
-  const [isLoading, setIsLoading, loadedAllPages] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!imageQuery) {
@@ -27,8 +27,7 @@ export const App = () => {
     getImages(imageQuery, page)
       .then(res => {
         setImages(prevState => [...prevState, ...mapperImages(res.data.hits)]);
-        if (res.data.hits.length  === imageQuery.length) {
-          loadedAllPages(true) }
+
         if (res.data.hits.length === 0) {
           return toast.error('Type something carefully');
         }
@@ -36,7 +35,7 @@ export const App = () => {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [page, imageQuery, loadedAllPages, setIsLoading]);
+  }, [page, imageQuery, setIsLoading]);
 
   const handleFormSubmit = imageQuery => {
     setImageQuery(imageQuery);
@@ -64,7 +63,7 @@ export const App = () => {
         <ImageGallery images={images} setCurrentImage={setCurrentImage} />
       )}
       {isLoading && <Loader />}
-      {images.length > 0 && loadedAllPages && <Button handleClick={showMoreImages} />}
+      {images.length >= 12 && <Button handleClick={showMoreImages} />}
       {bigImage && <Modal image={bigImage} closeModal={closeModal} />}
     </DivStyled>
   );
